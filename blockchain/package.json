@@ -1,0 +1,19 @@
+{
+  "name": "asha-mst-core",
+  "version": "1.0.0",
+  "description": "Standalone MST Blockchain Prototype for ASHA Worker Verification",
+  "main": "hardhat.config.js",
+  "scripts": {
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/deploy.js --network mstTestnet"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^18.0.4",
+    "hardhat": "^2.29.1"
+  }
+}
