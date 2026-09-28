@@ -24,6 +24,9 @@ All smart contracts are compiled with Solidity `^0.8.24` and deployed on the **M
 
 ---
 <img width="1690" height="866" alt="image" src="https://github.com/user-attachments/assets/5a08ada7-ae8f-4ff7-b962-02133ef32a72" />
+
+<img width="1625" height="826" alt="image" src="https://github.com/user-attachments/assets/529e119d-1746-4413-af60-1b592206a6f5" />
+
 <img width="1877" height="577" alt="image" src="https://github.com/user-attachments/assets/2295a0dc-c410-4638-aa5c-a5190970f9b9" />
 
 
