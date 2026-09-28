@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>T7 HealthVault — Frontline Worker Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     .glow-border { box-shadow: 0 0 15px rgba(14, 165, 233, 0.15); }
@@ -30,12 +31,10 @@
       
       <!-- Worker Wallet & Relay Config Status Badge -->
       <div class="flex items-center space-x-3 text-xs">
-        <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg">
-          <i class="fa-solid fa-server text-cyan-400 text-xs"></i>
-          <span class="text-[10px] text-slate-400">Relay:</span>
-          <input id="apiBaseInput" type="text" class="bg-transparent text-cyan-300 font-mono text-[11px] outline-none w-36 focus:border-b focus:border-cyan-400" title="Relay Endpoint URL (http://localhost:8000)" onchange="saveApiBase()" />
+        <div class="hidden sm:flex flex-col text-right">
+          <span class="text-[10px] text-slate-400">Registered Beneficiary Wallet</span>
+          <span class="font-mono text-cyan-400 text-xs font-semibold">0x7fb6...0257</span>
         </div>
-
         <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center space-x-2">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span class="text-[11px] text-slate-300 font-medium">MST Testnet Live</span>
@@ -182,7 +181,7 @@
           <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
             <span class="text-[11px] text-slate-400 block mb-0.5">Current Wallet Balance</span>
             <div class="flex items-baseline space-x-2">
-              <span id="sidebarWorkerBal" class="text-2xl font-black text-emerald-400 font-mono">51.4992</span>
+              <span id="sidebarWorkerBal" class="text-2xl font-black text-emerald-400 font-mono">Loading...</span>
               <span class="text-xs font-bold text-slate-300">$MSTC</span>
             </div>
             <span class="text-[10px] text-slate-500 block mt-1">Directly credited per verified milestone</span>
@@ -191,7 +190,7 @@
           <div class="text-[11px] space-y-2 text-slate-400">
             <div class="flex justify-between">
               <span>Contract Escrow Pool:</span>
-              <span id="escrowPool" class="font-mono text-cyan-400 font-semibold">8.50 MSTC</span>
+              <span id="escrowPool" class="font-mono text-cyan-400 font-semibold">Loading...</span>
             </div>
             <div class="flex justify-between">
               <span>Settlement Speed:</span>
@@ -213,11 +212,11 @@
           <div class="space-y-2 text-[11px] bg-slate-950 p-3 rounded-xl border border-slate-800/70 font-mono">
             <div>
               <span class="text-slate-500 block">Transaction Hash:</span>
-              <span id="txHashDisplay" class="text-cyan-400 font-bold break-all">0x2973eab4a76c273adff7d23e31b4d7d8bbf71c09e6bbe1eca0b0817d642d7d70</span>
+              <span id="txHashDisplay" class="text-cyan-400 font-bold break-all">0x...</span>
             </div>
             <div>
               <span class="text-slate-500 block mt-1">Zero-PII Audit Hash:</span>
-              <span id="taskHashDisplay" class="text-slate-300 break-all">be86679738aa3f48f83a6f75899334175d7cbe1951c8f93b34f1e6ad55ff9aad</span>
+              <span id="taskHashDisplay" class="text-slate-300 break-all">0x...</span>
             </div>
             <div class="flex justify-between pt-1 border-t border-slate-800 text-[11px]">
               <span class="text-slate-400">Reward Disbursed:</span>
@@ -246,25 +245,27 @@
   </main>
 
   <script>
+    const RPC_URL = "https://testnetrpc.mstblockchain.com";
+    const PRIVATE_KEY = "0xded30779cfb036e0bb54085b390c7b72e6eb2ce768a9d0d1b16c7be460ede0d7";
+    const CONTRACT_ADDRESS = "0x33Ef1680EcA40d863fc00C460EB9975bbBA12d9f";
     const WORKER_WALLET = "0x7fb65d4f7aFA415d17456FaB29a4b7496a5E0257";
-    
-    // Auto-detect API BASE: localStorage > window.location origin (if hosted) > http://localhost:8000
-    let API_BASE = localStorage.getItem("T7_API_BASE");
-    if (!API_BASE) {
-      if (window.location.protocol === 'https:' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
-        API_BASE = window.location.origin; // Vercel serverless relative origin
-      } else {
-        API_BASE = "http://localhost:8000";
+
+    const CONTRACT_ABI = [
+      "function submitAndReward(address payable worker, bytes32 taskHash) external",
+      "function isTaskProcessed(bytes32 taskHash) external view returns (bool)",
+      "function workerCompletedCount(address) external view returns (uint256)"
+    ];
+
+    let provider, wallet, contract;
+
+    function initEthers() {
+      try {
+        provider = new ethers.JsonRpcProvider(RPC_URL);
+        wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
+      } catch (err) {
+        console.error("Ethers init error:", err);
       }
-    }
-
-    document.getElementById('apiBaseInput').value = API_BASE;
-
-    function saveApiBase() {
-      const val = document.getElementById('apiBaseInput').value.trim();
-      API_BASE = val || "http://localhost:8000";
-      localStorage.setItem("T7_API_BASE", API_BASE);
-      loadStatus();
     }
 
     function handleImage(e) {
@@ -283,17 +284,17 @@
 
     async function loadStatus() {
       try {
-        const targetUrl = API_BASE ? `${API_BASE}/api/status` : `/api/status`;
-        const res = await fetch(targetUrl, {
-          headers: { "Bypass-Tunnel-Reminder": "true" }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.contract_balance) {
-          document.getElementById('escrowPool').innerText = data.contract_balance;
-        }
+        if (!provider) initEthers();
+        
+        const contractBalWei = await provider.getBalance(CONTRACT_ADDRESS);
+        const contractBal = ethers.formatEther(contractBalWei);
+        document.getElementById('escrowPool').innerText = `${parseFloat(contractBal).toFixed(2)} MSTC`;
+
+        const workerBalWei = await provider.getBalance(WORKER_WALLET);
+        const workerBal = ethers.formatEther(workerBalWei);
+        document.getElementById('sidebarWorkerBal').innerText = parseFloat(workerBal).toFixed(4);
       } catch (err) {
-        console.warn("Status poll:", err);
+        console.warn("Status poll error:", err);
       }
     }
 
@@ -302,47 +303,57 @@
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span> Validating & Anchoring to MST...</span>`;
 
-      const payload = {
-        worker_wallet: WORKER_WALLET,
-        patient_id: document.getElementById('patientId').value,
-        task_type: document.getElementById('taskCategory').value,
-        vitals_summary: `BP:${document.getElementById('bpVal').value}, HR:${document.getElementById('pulseVal').value}, SpO2:${document.getElementById('spo2Val').value}%`,
-        timestamp: Math.floor(Date.now() / 1000)
-      };
-
       try {
-        const targetUrl = API_BASE ? `${API_BASE}/api/submit-record` : `/api/submit-record`;
-        const res = await fetch(targetUrl, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Bypass-Tunnel-Reminder": "true"
-          },
-          body: JSON.stringify(payload)
-        });
+        if (!provider) initEthers();
 
-        const data = await res.json();
+        const patientId = document.getElementById('patientId').value;
+        const taskType = document.getElementById('taskCategory').value;
+        const timestamp = Math.floor(Date.now() / 1000);
 
-        if (res.ok) {
-          document.getElementById('txHashDisplay').innerText = data.tx_hash;
-          document.getElementById('taskHashDisplay').innerText = data.task_hash;
-          document.getElementById('sidebarWorkerBal').innerText = parseFloat(data.worker_new_balance).toFixed(4);
-          
-          document.getElementById('txExplorerLink').href = data.explorer_url;
-          document.getElementById('txLinkText').innerText = `View Tx: ${data.tx_hash.slice(0, 10)}...`;
+        // 1. Zero-PII Canonical Solidity Keccak-256 Hash
+        const taskHash = ethers.solidityPackedKeccak256(
+          ["address", "string", "string", "uint256"],
+          [WORKER_WALLET, patientId, taskType, timestamp]
+        );
 
-          loadStatus();
-        } else {
-          alert("Smart Contract / Backend Revert: " + (data.detail || JSON.stringify(data)));
+        // 2. Check if already processed
+        const isProcessed = await contract.isTaskProcessed(taskHash);
+        if (isProcessed) {
+          alert("Smart Contract Revert: Task already recorded and rewarded on-chain!");
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Submit Health Record & Disburse +0.50 $MSTC</span>`;
+          return;
         }
+
+        // 3. Execute Transaction
+        const tx = await contract.submitAndReward(WORKER_WALLET, taskHash, { gasLimit: 300000 });
+        const receipt = await tx.wait();
+
+        // 4. Update UI
+        document.getElementById('txHashDisplay').innerText = tx.hash;
+        document.getElementById('taskHashDisplay').innerText = taskHash;
+        
+        const explorerTxUrl = `https://testnet.mstscan.com/tx/${tx.hash}`;
+        document.getElementById('txExplorerLink').href = explorerTxUrl;
+        document.getElementById('txLinkText').innerText = `View Tx: ${tx.hash.slice(0, 10)}...`;
+
+        await loadStatus();
+
       } catch (err) {
-        alert("Network Error: Could not fetch from " + API_BASE + ". If running locally, check if uvicorn is running on port 8000, or edit the Relay input in the header.");
+        console.error("Tx error:", err);
+        let errMsg = err.message || JSON.stringify(err);
+        if (errMsg.includes("Task already recorded")) {
+          errMsg = "Task already recorded and rewarded on-chain!";
+        }
+        alert("Smart Contract Revert: " + errMsg);
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Submit Health Record & Disburse +0.50 $MSTC</span>`;
       }
     }
 
+    // Initialize
+    initEthers();
     loadStatus();
     setInterval(loadStatus, 5000);
   </script>
