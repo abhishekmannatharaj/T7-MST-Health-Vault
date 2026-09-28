@@ -339,7 +339,7 @@ python train_and_export.py
 
 ## 👨‍💻 Author & Acknowledgements
 
-* **Developed by:** **M M Bharath**
+* **Developed by:** **M M Bharath** **Abhishek Mannatharaj** **Abdul Shuaib** **Nithelan Jayakumar** 
 * **Clinical Training Data:** PhysioNet / Computing in Cardiology Challenge 2019 (CC BY 4.0)
 * **Clinical Protocol Standards:** UK Royal College of Physicians (NEWS2)
 * **Generative Language Model:** Alibaba Cloud Qwen Team (Qwen3-1.7B)
