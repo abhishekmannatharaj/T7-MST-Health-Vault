@@ -284,7 +284,9 @@
     async function loadStatus() {
       try {
         const targetUrl = API_BASE ? `${API_BASE}/api/status` : `/api/status`;
-        const res = await fetch(targetUrl);
+        const res = await fetch(targetUrl, {
+          headers: { "Bypass-Tunnel-Reminder": "true" }
+        });
         if (!res.ok) return;
         const data = await res.json();
         if (data.contract_balance) {
@@ -312,7 +314,10 @@
         const targetUrl = API_BASE ? `${API_BASE}/api/submit-record` : `/api/submit-record`;
         const res = await fetch(targetUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Bypass-Tunnel-Reminder": "true"
+          },
           body: JSON.stringify(payload)
         });
 
