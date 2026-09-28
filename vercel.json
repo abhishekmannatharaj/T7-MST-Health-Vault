@@ -1,16 +1,3 @@
 {
-  "version": 2,
-  "public": true,
-  "builds": [
-    {
-      "src": "web_dashboard/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/web_dashboard/$1"
-    }
-  ]
+  "outputDirectory": "web_dashboard"
 }
