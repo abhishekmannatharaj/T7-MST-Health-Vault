@@ -28,12 +28,14 @@
         </div>
       </div>
       
-      <!-- Worker Wallet Status Badge -->
+      <!-- Worker Wallet & Relay Config Status Badge -->
       <div class="flex items-center space-x-3 text-xs">
-        <div class="hidden sm:flex flex-col text-right">
-          <span class="text-[10px] text-slate-400">Registered Beneficiary Wallet</span>
-          <span class="font-mono text-cyan-400 text-xs font-semibold">0x7fb6...0257</span>
+        <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg">
+          <i class="fa-solid fa-server text-cyan-400 text-xs"></i>
+          <span class="text-[10px] text-slate-400">Relay:</span>
+          <input id="apiBaseInput" type="text" class="bg-transparent text-cyan-300 font-mono text-[11px] outline-none w-36 focus:border-b focus:border-cyan-400" title="Relay Endpoint URL (http://localhost:8000)" onchange="saveApiBase()" />
         </div>
+
         <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center space-x-2">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span class="text-[11px] text-slate-300 font-medium">MST Testnet Live</span>
@@ -244,8 +246,26 @@
   </main>
 
   <script>
-    const API_BASE = "http://localhost:8000";
     const WORKER_WALLET = "0x7fb65d4f7aFA415d17456FaB29a4b7496a5E0257";
+    
+    // Auto-detect API BASE: localStorage > window.location origin (if hosted) > http://localhost:8000
+    let API_BASE = localStorage.getItem("T7_API_BASE");
+    if (!API_BASE) {
+      if (window.location.protocol === 'https:' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+        API_BASE = window.location.origin; // Vercel serverless relative origin
+      } else {
+        API_BASE = "http://localhost:8000";
+      }
+    }
+
+    document.getElementById('apiBaseInput').value = API_BASE;
+
+    function saveApiBase() {
+      const val = document.getElementById('apiBaseInput').value.trim();
+      API_BASE = val || "http://localhost:8000";
+      localStorage.setItem("T7_API_BASE", API_BASE);
+      loadStatus();
+    }
 
     function handleImage(e) {
       const file = e.target.files[0];
@@ -263,7 +283,8 @@
 
     async function loadStatus() {
       try {
-        const res = await fetch(`${API_BASE}/api/status`);
+        const targetUrl = API_BASE ? `${API_BASE}/api/status` : `/api/status`;
+        const res = await fetch(targetUrl);
         if (!res.ok) return;
         const data = await res.json();
         if (data.contract_balance) {
@@ -288,7 +309,8 @@
       };
 
       try {
-        const res = await fetch(`${API_BASE}/api/submit-record`, {
+        const targetUrl = API_BASE ? `${API_BASE}/api/submit-record` : `/api/submit-record`;
+        const res = await fetch(targetUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -309,7 +331,7 @@
           alert("Smart Contract / Backend Revert: " + (data.detail || JSON.stringify(data)));
         }
       } catch (err) {
-        alert("Network Error: Could not connect to FastAPI relay on port 8000: " + err.message);
+        alert("Network Error: Could not fetch from " + API_BASE + ". If running locally, check if uvicorn is running on port 8000, or edit the Relay input in the header.");
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Submit Health Record & Disburse +0.50 $MSTC</span>`;
