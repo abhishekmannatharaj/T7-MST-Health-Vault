@@ -1,27 +1,18 @@
 {
-  "name": "blockchain",
+  "name": "asha-mst-core",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
+  "description": "Standalone MST Blockchain Prototype for ASHA Worker Verification",
+  "main": "hardhat.config.js",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test",
-    "test:verbose": "hardhat test --verbose",
-    "deploy:local": "hardhat run scripts/deploy.js",
-    "deploy:testnet": "hardhat run scripts/deploy.js --network mstTestnet",
-    "node": "hardhat node",
-    "clean": "hardhat clean"
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/deploy.js --network mstTestnet"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "license": "MIT",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
-    "@openzeppelin/contracts": "^5.6.1",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "dotenv": "^18.0.4",
     "hardhat": "^2.29.1"
   }

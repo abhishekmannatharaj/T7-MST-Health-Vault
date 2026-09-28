@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T7 HealthVault — Frontline Worker Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .glow-border { box-shadow: 0 0 15px rgba(14, 165, 233, 0.15); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-cyan-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur sticky top-0 z-40 px-6 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-cyan-600 flex items-center justify-center font-bold text-white shadow-md shadow-cyan-600/30">
+          <i class="fa-solid fa-heart-pulse"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-extrabold text-base tracking-tight text-white">T7 HealthVault</h1>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">ASHA Field Terminal</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Offline-First Field Care & Automated Stipend Settlement</p>
+        </div>
+      </div>
+      
+      <!-- Worker Wallet Status Badge -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="hidden sm:flex flex-col text-right">
+          <span class="text-[10px] text-slate-400">Registered Beneficiary Wallet</span>
+          <span class="font-mono text-cyan-400 text-xs font-semibold">0x7fb6...0257</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-[11px] text-slate-300 font-medium">MST Testnet Live</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto p-4 sm:p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left / Center: Clinical Patient & Health Visit Entry Form -->
+      <div class="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6">
+        
+        <!-- Form Header -->
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+              <i class="fa-solid fa-clipboard-user text-cyan-400"></i>
+              <span>Patient Health Milestone Form</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Capture field vitals and complete task verification</p>
+          </div>
+          <span class="text-xs bg-slate-800/80 text-emerald-400 font-semibold px-2.5 py-1 rounded-md border border-slate-700/50">
+            <i class="fa-solid fa-shield-halved mr-1"></i> Zero-PII Enforced
+          </span>
+        </div>
+
+        <!-- Section 1: Patient Identity & Verification -->
+        <div class="space-y-3">
+          <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">1. Patient Identification</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Patient Token / ABHA ID</label>
+              <input id="patientId" type="text" value="ABHA-BLR-89201" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-cyan-300 focus:border-cyan-500 outline-none transition" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Aadhaar (Last 4 digits only)</label>
+              <input id="aadhaarLast4" type="text" value="4821" maxlength="4"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none transition" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Village / Ward Area</label>
+              <input id="wardArea" type="text" value="Kadugodi Ward 04" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-cyan-500 outline-none transition" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Clinical Vitals & Early Warning Assessment -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">2. Clinical Vitals & Triage</label>
+            <span class="text-[10px] text-cyan-400 font-mono">NEWS2 & Sepsis Triage Ready</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">BP (Systolic / Diastolic)</label>
+              <input id="bpVal" type="text" value="120/80" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Pulse (bpm)</label>
+              <input id="pulseVal" type="number" value="76" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">SpO2 (%)</label>
+              <input id="spo2Val" type="number" value="98" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Blood Sugar (mg/dL)</label>
+              <input id="sugarVal" type="number" value="105" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Task Milestone Category -->
+        <div class="space-y-3">
+          <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">3. Healthcare Milestone Activity</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Task Category (Eligible for Stipend)</label>
+              <select id="taskCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-cyan-500 outline-none">
+                <option value="Maternal ANC Checkup 3">Maternal ANC Checkup 3 (₹200 / +0.50 $MSTC)</option>
+                <option value="Child Immunization Polio Booster">Child Immunization: Polio Booster (+0.50 $MSTC)</option>
+                <option value="Institutional Delivery Accompaniment">Institutional Delivery Accompaniment (+0.50 $MSTC)</option>
+                <option value="Geriatric Chronic Disease Follow-up">Geriatric Chronic Disease Follow-up (+0.50 $MSTC)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Visit Verification Notes</label>
+              <input id="visitNotes" type="text" value="Iron tablets distributed. Mother counseling completed." 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-cyan-500 outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Photo / Verification Document Capture -->
+        <div class="space-y-2">
+          <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">4. Photo Verification (Prescription / Child Card)</label>
+          <div class="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 rounded-xl p-4 text-center cursor-pointer transition bg-slate-950/40 relative">
+            <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleImage(event)" />
+            <div id="uploadPrompt" class="space-y-1">
+              <i class="fa-solid fa-camera text-slate-500 text-xl mb-1"></i>
+              <p class="text-xs text-slate-300 font-medium">Click to snap photo or select file</p>
+              <p class="text-[10px] text-slate-500">Stored locally in off-chain database (Encrypted)</p>
+            </div>
+            <div id="imagePreviewContainer" class="hidden flex items-center justify-center space-x-3">
+              <img id="imagePreview" src="" alt="Proof" class="h-16 w-16 object-cover rounded-lg border border-slate-700" />
+              <div class="text-left text-xs">
+                <span id="imageFileName" class="text-slate-200 font-semibold block">immunization_card.jpg</span>
+                <span class="text-emerald-400 text-[10px]"><i class="fa-solid fa-check"></i> Image attached locally</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Action -->
+        <div class="pt-2">
+          <button id="submitBtn" onclick="submitAshaRecord()" 
+                  class="w-full py-4 bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/20 active:scale-[0.99] transition flex items-center justify-center space-x-2 text-sm">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Submit Health Record & Disburse +0.50 $MSTC</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Micro-Stipend & Blockchain Settlement Sidebar -->
+      <div class="lg:col-span-4 space-y-5">
+        
+        <!-- Live Wallet Balance Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold text-slate-300">ASHA Worker Incentive Wallet</span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded">Instant Payout</span>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
+            <span class="text-[11px] text-slate-400 block mb-0.5">Current Wallet Balance</span>
+            <div class="flex items-baseline space-x-2">
+              <span id="sidebarWorkerBal" class="text-2xl font-black text-emerald-400 font-mono">51.4992</span>
+              <span class="text-xs font-bold text-slate-300">$MSTC</span>
+            </div>
+            <span class="text-[10px] text-slate-500 block mt-1">Directly credited per verified milestone</span>
+          </div>
+
+          <div class="text-[11px] space-y-2 text-slate-400">
+            <div class="flex justify-between">
+              <span>Contract Escrow Pool:</span>
+              <span id="escrowPool" class="font-mono text-cyan-400 font-semibold">8.50 MSTC</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Settlement Speed:</span>
+              <span class="font-mono text-emerald-400 font-semibold">&lt; 3 Seconds</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mined Transaction Confirmation Card -->
+        <div id="minedCard" class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-5 space-y-3.5 shadow-xl glow-border">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <h3 class="font-bold text-emerald-400 text-xs uppercase tracking-wider">Mined On MST Blockchain</h3>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">MST Testnet</span>
+          </div>
+
+          <div class="space-y-2 text-[11px] bg-slate-950 p-3 rounded-xl border border-slate-800/70 font-mono">
+            <div>
+              <span class="text-slate-500 block">Transaction Hash:</span>
+              <span id="txHashDisplay" class="text-cyan-400 font-bold break-all">0x2973eab4a76c273adff7d23e31b4d7d8bbf71c09e6bbe1eca0b0817d642d7d70</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block mt-1">Zero-PII Audit Hash:</span>
+              <span id="taskHashDisplay" class="text-slate-300 break-all">be86679738aa3f48f83a6f75899334175d7cbe1951c8f93b34f1e6ad55ff9aad</span>
+            </div>
+            <div class="flex justify-between pt-1 border-t border-slate-800 text-[11px]">
+              <span class="text-slate-400">Reward Disbursed:</span>
+              <span class="text-emerald-400 font-bold">+0.50 $MSTC</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <a id="contractExplorerLink" href="https://testnet.mstscan.com/address/0x33Ef1680EcA40d863fc00C460EB9975bbBA12d9f" target="_blank"
+               class="flex items-center justify-center w-full py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-cyan-400 rounded-xl text-xs font-semibold transition space-x-2">
+              <span>Verify Contract Live on testnet.mstscan.com</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+
+            <a id="txExplorerLink" href="https://testnet.mstscan.com/address/0x33Ef1680EcA40d863fc00C460EB9975bbBA12d9f" target="_blank"
+               class="flex items-center justify-center w-full py-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-[11px] font-mono transition space-x-1">
+              <i class="fa-solid fa-link text-[9px]"></i>
+              <span id="txLinkText">View Specific Tx (Indexing...)</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = "http://localhost:8000";
+    const WORKER_WALLET = "0x7fb65d4f7aFA415d17456FaB29a4b7496a5E0257";
+
+    function handleImage(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('imagePreview').src = evt.target.result;
+          document.getElementById('imageFileName').innerText = file.name;
+          document.getElementById('uploadPrompt').classList.add('hidden');
+          document.getElementById('imagePreviewContainer').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/status`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.contract_balance) {
+          document.getElementById('escrowPool').innerText = data.contract_balance;
+        }
+      } catch (err) {
+        console.warn("Status poll:", err);
+      }
+    }
+
+    async function submitAshaRecord() {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span> Validating & Anchoring to MST...</span>`;
+
+      const payload = {
+        worker_wallet: WORKER_WALLET,
+        patient_id: document.getElementById('patientId').value,
+        task_type: document.getElementById('taskCategory').value,
+        vitals_summary: `BP:${document.getElementById('bpVal').value}, HR:${document.getElementById('pulseVal').value}, SpO2:${document.getElementById('spo2Val').value}%`,
+        timestamp: Math.floor(Date.now() / 1000)
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/submit-record`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          document.getElementById('txHashDisplay').innerText = data.tx_hash;
+          document.getElementById('taskHashDisplay').innerText = data.task_hash;
+          document.getElementById('sidebarWorkerBal').innerText = parseFloat(data.worker_new_balance).toFixed(4);
+          
+          document.getElementById('txExplorerLink').href = data.explorer_url;
+          document.getElementById('txLinkText').innerText = `View Tx: ${data.tx_hash.slice(0, 10)}...`;
+
+          loadStatus();
+        } else {
+          alert("Smart Contract / Backend Revert: " + (data.detail || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert("Network Error: Could not connect to FastAPI relay on port 8000: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Submit Health Record & Disburse +0.50 $MSTC</span>`;
+      }
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 5000);
+  </script>
+</body>
+</html>

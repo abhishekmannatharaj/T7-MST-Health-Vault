@@ -1,408 +1,203 @@
-"""
-main.py — HealthVault Trust Layer Relay API
-───────────────────────────────────────────
-FastAPI backend that:
-  1. Creates custodial worker wallets and registers them on-chain (admin flow)
-  2. Receives APK outbox payloads and relays them to MST contracts
-  3. Provides a public /verify endpoint for the hospital web verifier
-
-Routes:
-  POST /register-worker   ← Admin web app calls this (BridgeKey authenticated)
-  POST /consent           ← APK outbox → ConsentRegistry
-  POST /anchor            ← APK outbox → RecordAnchor
-  POST /visit             ← APK outbox → StipendVault
-  GET  /verify/{hash}     ← Hospital verifier (public read-only)
-  GET  /worker/{address}  ← Worker balance + status
-  GET  /health            ← Chain connectivity check
-"""
-
 import os
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Header
+import time
+from typing import Optional
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
+import eth_abi
+from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-from hasher import (
-    keccak256_of_vitals,
-    beneficiary_commitment,
-    visit_key,
-    ai_digest,
-    validate_test_vector,
-    EXPECTED_HASH,
-)
-from chain import ChainClient
-from worker_keys import (
-    create_worker_account,
-    load_worker_account,
-    worker_exists,
-    list_workers,
-)
+app = FastAPI(title="T7 HealthVault MST Relay")
 
-# ─── App lifecycle ─────────────────────────────────────────────────────────────
-
-chain: ChainClient | None = None
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global chain
-    # Validate cross-language hash test vector at startup
-    print("🔍 Validating canonical hash test vector...")
-    validate_test_vector()
-    print(f"✅ Test vector OK: {EXPECTED_HASH}")
-
-    # Connect to MST chain
-    print("🔗 Connecting to MST Testnet...")
-    try:
-        chain = ChainClient()
-        h = chain.health()
-        print(f"✅ Connected — Block #{h['block']}, ChainID {h['chain_id']}")
-        print(f"   Relay address: {h['relay_address']}")
-    except Exception as e:
-        print(f"⚠️  Chain connection warning: {e}")
-        print("   Running in offline mode — blockchain calls will fail")
-        chain = None
-
-    yield  # App is running
-
-    print("👋 Relay shutting down")
-
-
-app = FastAPI(
-    title="HealthVault Trust Layer Relay",
-    description=(
-        "Relay backend for HealthVault × MST Blockchain. "
-        "Signs and submits worker transactions to the MST testnet."
-    ),
-    version="2.0.0",
-    lifespan=lifespan,
-)
-
-# CORS — allow the web app and APK to call us
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict to your domains in production
-    allow_methods=["GET", "POST"],
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Connect to MST Testnet
+RPC_URL = os.getenv("MST_RPC_URL", "https://testnetrpc.mstblockchain.com")
+w3 = Web3(Web3.HTTPProvider(RPC_URL))
+try:
+    w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+except Exception:
+    pass
 
-# ─── Admin auth (simple shared secret for hackathon) ──────────────────────────
-
-def _check_admin(x_admin_secret: str | None):
-    """Verify the X-Admin-Secret header matches RELAY_SECRET env var."""
-    expected = os.getenv("RELAY_SECRET", "change_me_to_a_long_random_secret")
-    if x_admin_secret != expected:
-        raise HTTPException(status_code=401, detail="Invalid admin secret")
-
-
-# ─── Request / Response models ─────────────────────────────────────────────────
-
-class RegisterWorkerRequest(BaseModel):
-    worker_name:   str = Field(..., description="Full name of the ASHA worker")
-    phone:         str = Field(..., description="Worker phone number")
-    aadhaar_last4: str = Field(..., description="Last 4 digits of Aadhaar (not stored on-chain)")
-    admin_address: str = Field(..., description="BridgeKey address of the registering admin")
-
-
-class ConsentRequest(BaseModel):
-    worker_address:    str = Field(..., description="Relay-held worker address")
-    beneficiary_id:    str = Field(..., description="Internal beneficiary ID (not Aadhaar)")
-    family_salt:       str = Field(..., description="Per-family random salt (stored only in relay)")
-    provider_address:  str = Field(..., description="Hospital BridgeKey address")
-    categories:        int = Field(3, description="Bitmask: 1=maternal, 2=general, 4=emergency")
-    duration_days:     int = Field(30, description="Consent validity in days")
-
-
-class AnchorRequest(BaseModel):
-    worker_address:  str = Field(..., description="Relay-held worker address")
-    vitals:          dict = Field(..., description="Raw vitals dict — relay computes the hash")
-    beneficiary_id:  str = Field(..., description="For cross-referencing (not stored on-chain)")
-    # Optional AI output
-    model_version:   str | None = Field(None, description="e.g. 'sepsis-v1'")
-    ai_output_label: str | None = Field(None, description="'HIGH', 'LOW', 'MODERATE'")
-
-
-class VisitRequest(BaseModel):
-    worker_address:  str = Field(..., description="Relay-held worker address")
-    beneficiary_id:  str = Field(..., description="Internal beneficiary ID")
-    family_salt:     str = Field(..., description="Per-family random salt")
-    task_type:       int = Field(1, description="1=Home Visit, 2=ANC, 3=Immunization, 4=Delivery, 5=Neonatal")
-    period:          str = Field(..., description="'YYYY-MM' e.g. '2026-09' — prevents same-month replay")
-
-
-class BatchAttestRequest(BaseModel):
-    visit_keys: list[str] = Field(..., description="List of visit keys (hex) to attest and pay in one batch")
-
-
-
-# ─── Routes ────────────────────────────────────────────────────────────────────
-
-@app.get("/health")
-async def health_check():
-    """Chain connectivity and relay status."""
-    if chain is None:
-        return {"connected": False, "message": "Relay running in offline mode"}
+PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+if PRIVATE_KEY:
     try:
-        return chain.health()
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Chain error: {str(e)}")
+        account = w3.eth.account.from_key(PRIVATE_KEY)
+        ADMIN_ADDRESS = account.address
+    except Exception:
+        ADMIN_ADDRESS = None
+else:
+    ADMIN_ADDRESS = None
 
+CONTRACT_ADDRESS_RAW = os.getenv("CONTRACT_ADDRESS", "0x33Ef1680EcA40d863fc00C460EB9975bbBA12d9f")
+CONTRACT_ADDRESS = Web3.to_checksum_address(CONTRACT_ADDRESS_RAW) if CONTRACT_ADDRESS_RAW else None
 
-@app.post("/register-worker")
-async def register_worker(
-    req: RegisterWorkerRequest,
-    x_admin_secret: str | None = Header(None),
-):
-    """
-    Admin registers a new ASHA worker.
-    Creates a custodial wallet, registers it on-chain via WorkerRegistry.
-    Protected by X-Admin-Secret header.
-    """
-    _check_admin(x_admin_secret)
+CONTRACT_ABI = [
+    {
+        "inputs": [
+            {"internalType": "address payable", "name": "worker", "type": "address"},
+            {"internalType": "bytes32", "name": "taskHash", "type": "bytes32"}
+        ],
+        "name": "submitAndReward",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [{"internalType": "bytes32", "name": "taskHash", "type": "bytes32"}],
+        "name": "isTaskProcessed",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "name": "workerCompletedCount",
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
 
-    # 1. Create wallet
-    worker_info = create_worker_account(req.worker_name, req.phone, req.aadhaar_last4)
-    worker_address = worker_info["address"]
-    cred_hash      = worker_info["cred_hash"]
+contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=CONTRACT_ABI) if CONTRACT_ADDRESS else None
 
-    # 2. Register on-chain
-    if chain is None:
+class RecordPayload(BaseModel):
+    worker_wallet: Optional[str] = "0x7fb65d4f7aFA415d17456FaB29a4b7496a5E0257"
+    worker_address: Optional[str] = None
+    patient_id: Optional[str] = "ABHA-BLR-89201"
+    patient_identifier: Optional[str] = None
+    task_type: Optional[str] = "Maternal ANC Checkup 3"
+    visit_type: Optional[str] = None
+    vitals_summary: Optional[str] = "BP:120/80, HR:76, SpO2:98%"
+    vitals_note: Optional[str] = None
+    timestamp: Optional[int] = None
+
+@app.get("/")
+def read_root():
+    return {
+        "status": "T7 HealthVault Relay Online",
+        "network": "MST Testnet",
+        "contract": CONTRACT_ADDRESS
+    }
+
+@app.get("/api/status")
+def get_status():
+    try:
+        is_connected = w3.is_connected()
+        escrow_bal = float(w3.from_wei(w3.eth.get_balance(CONTRACT_ADDRESS), "ether")) if (CONTRACT_ADDRESS and is_connected) else 0.0
+        admin_bal = float(w3.from_wei(w3.eth.get_balance(ADMIN_ADDRESS), "ether")) if (ADMIN_ADDRESS and is_connected) else 0.0
+        block_num = w3.eth.block_number if is_connected else 0
+
         return {
-            "worker_address": worker_address,
-            "cred_hash":      cred_hash,
-            "tx_hash":        None,
-            "warning":        "Relay in offline mode — not registered on-chain",
+            "status": "online",
+            "connected": is_connected,
+            "block_number": block_num,
+            "contract_address": CONTRACT_ADDRESS,
+            "contract_balance": f"{escrow_bal:.2f} MSTC",
+            "admin_balance": f"{admin_bal:.2f} MSTC",
+            "contract_balance_mstc": escrow_bal,
+            "admin_balance_mstc": admin_bal
         }
-
-    try:
-        tx_hash = chain.register_worker(worker_address, cred_hash)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"On-chain registration failed: {str(e)}")
+        return {"status": "error", "detail": str(e)}
 
-    return {
-        "worker_address": worker_address,
-        "cred_hash":      cred_hash,
-        "tx_hash":        tx_hash,
-        "explorer":       f"https://mstscan.com/tx/{tx_hash}",
-    }
+def process_record(payload: RecordPayload):
+    if not w3.is_connected():
+        raise HTTPException(status_code=500, detail="Unable to connect to MST Testnet RPC")
 
+    if not PRIVATE_KEY or not ADMIN_ADDRESS:
+        raise HTTPException(status_code=400, detail="Admin private key not configured in .env")
 
-@app.post("/consent")
-async def grant_consent(req: ConsentRequest):
-    """
-    APK outbox → ConsentRegistry.grant()
-    Worker grants patient consent for a provider.
-    Beneficiary commitment (keccak hash) goes on-chain — no PII.
-    """
-    if chain is None:
-        raise HTTPException(status_code=503, detail="Relay in offline mode")
+    raw_worker = payload.worker_wallet or payload.worker_address or "0x7fb65d4f7aFA415d17456FaB29a4b7496a5E0257"
+    try:
+        worker = Web3.to_checksum_address(raw_worker)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid worker EVM wallet address format")
 
-    if not worker_exists(req.worker_address):
-        raise HTTPException(status_code=404, detail="Worker not found in key store")
-
-    worker_account = load_worker_account(req.worker_address)
-
-    # Compute patient commitment (no PII on-chain)
-    patient_commit = beneficiary_commitment(req.beneficiary_id, req.family_salt)
-
-    # Expiry
-    expiry_unix = int(
-        datetime.now(timezone.utc).timestamp() + req.duration_days * 86400
-    )
+    patient_id = payload.patient_id or payload.patient_identifier or "ABHA-BLR-89201"
+    task_type = payload.task_type or payload.visit_type or "Maternal ANC Checkup 3"
+    ts = payload.timestamp or int(time.time())
 
     try:
-        tx_hash, consent_id = chain.grant_consent(
-            patient_commitment=patient_commit,
-            provider_address=req.provider_address,
-            categories=req.categories,
-            expiry_unix=expiry_unix,
-            worker_account=worker_account,
+        # 1. Zero-PII Canonical Keccak-256 Hash
+        raw_bytes = eth_abi.encode(
+            ["address", "string", "string", "uint256"],
+            [worker, patient_id, task_type, ts]
         )
+        task_hash = w3.keccak(raw_bytes)
+    except Exception:
+        # Fallback raw keccak hash if ABI encoding fails
+        raw_str = f"{worker}:{patient_id}:{task_type}:{ts}".encode("utf-8")
+        task_hash = w3.keccak(raw_str)
+
+    task_hash_bytes32 = "0x" + task_hash.hex() if not isinstance(task_hash, str) else task_hash
+
+    # 2. Duplicate Detection
+    try:
+        if contract.functions.isTaskProcessed(task_hash).call():
+            raise HTTPException(status_code=400, detail="Task already recorded and rewarded on-chain!")
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Consent grant failed: {str(e)}")
-
-    return {
-        "tx_hash":    tx_hash,
-        "consent_id": consent_id,
-        "expires_at": datetime.fromtimestamp(expiry_unix, tz=timezone.utc).isoformat(),
-        "explorer":   f"https://mstscan.com/tx/{tx_hash}",
-    }
-
-
-@app.post("/anchor")
-async def anchor_record(req: AnchorRequest):
-    """
-    APK outbox → RecordAnchor.anchor()
-    Relay recomputes the canonical vitals hash (guarantees consistency)
-    and anchors it on-chain with optional AI digest.
-    """
-    if chain is None:
-        raise HTTPException(status_code=503, detail="Relay in offline mode")
-
-    if not worker_exists(req.worker_address):
-        raise HTTPException(status_code=404, detail="Worker not found in key store")
-
-    # Recompute hash server-side (canonical rules enforced here)
-    record_root_hex = keccak256_of_vitals(req.vitals)
-
-    # Optional AI digest
-    ai_digest_hex = "0x" + "00" * 32  # zero bytes32 = no AI flag
-    if req.model_version and req.ai_output_label:
-        ai_digest_hex = "0x" + ai_digest(
-            req.model_version,
-            record_root_hex,
-            req.ai_output_label,
-        ).hex()
-
-    worker_account = load_worker_account(req.worker_address)
+        if "already recorded" in str(e):
+            raise HTTPException(status_code=400, detail="Task already recorded and rewarded on-chain!")
 
     try:
-        tx_hash = chain.anchor_record(
-            record_root_hex=record_root_hex,
-            ai_digest_hex=ai_digest_hex,
-            worker_account=worker_account,
-        )
+        # 3. Sign & Broadcast Transaction to MST Testnet
+        nonce = w3.eth.get_transaction_count(ADMIN_ADDRESS)
+        gas_price = w3.eth.gas_price
+
+        tx = contract.functions.submitAndReward(worker, task_hash).build_transaction({
+            "from": ADMIN_ADDRESS,
+            "nonce": nonce,
+            "gas": 250000,
+            "gasPrice": gas_price,
+            "chainId": 91562037
+        })
+
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key=PRIVATE_KEY)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        tx_hash_hex = tx_hash.hex()
+        if not tx_hash_hex.startswith("0x"):
+            tx_hash_hex = "0x" + tx_hash_hex
+
+        # Wait for transaction receipt
+        w3.eth.wait_for_transaction_receipt(tx_hash, timeout=30)
+
+        worker_bal = float(w3.from_wei(w3.eth.get_balance(worker), "ether"))
+
+        return {
+            "status": "success",
+            "success": True,
+            "tx_hash": tx_hash_hex,
+            "explorer_url": f"https://testnet.mstscan.com/tx/{tx_hash_hex}",
+            "task_hash": task_hash.hex() if hasattr(task_hash, "hex") else str(task_hash),
+            "worker_new_balance": float(worker_bal),
+            "worker_balance_mstc": float(worker_bal)
+        }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Anchor failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Transaction failed: {str(e)}")
 
-    return {
-        "tx_hash":         tx_hash,
-        "record_hash":     record_root_hex,
-        "ai_digest":       ai_digest_hex,
-        "beneficiary_ref": req.beneficiary_id,
-        "explorer":        f"https://mstscan.com/tx/{tx_hash}",
-    }
+@app.post("/api/submit-record")
+def submit_record(payload: RecordPayload):
+    return process_record(payload)
 
+@app.post("/api/anchor-visit")
+def anchor_visit(payload: RecordPayload):
+    return process_record(payload)
 
-@app.post("/visit")
-async def submit_visit(req: VisitRequest):
-    """
-    APK outbox → StipendVault.submitVisit()
-    Relay computes the visit key and submits it for hospital attestation.
-    """
-    if chain is None:
-        raise HTTPException(status_code=503, detail="Relay in offline mode")
-
-    if not worker_exists(req.worker_address):
-        raise HTTPException(status_code=404, detail="Worker not found in key store")
-
-    worker_account = load_worker_account(req.worker_address)
-
-    # Compute visit key
-    b_commit = beneficiary_commitment(req.beneficiary_id, req.family_salt)
-    vk_bytes = visit_key(b_commit, req.task_type, req.period)
-    vk_hex   = "0x" + vk_bytes.hex()
-
-    try:
-        tx_hash = chain.submit_visit(
-            visit_key_hex=vk_hex,
-            task_type=req.task_type,
-            worker_account=worker_account,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Visit submit failed: {str(e)}")
-
-    return {
-        "tx_hash":   tx_hash,
-        "visit_key": vk_hex,
-        "explorer":  f"https://mstscan.com/tx/{tx_hash}",
-    }
-
-
-@app.post("/batch-attest")
-async def batch_attest_visits(
-    req: BatchAttestRequest,
-    x_admin_secret: str | None = Header(None),
-):
-    """
-    Admin: Batch-attests an ASHA worker's monthly survey batch in 1 on-chain transaction.
-    Transfers CareCoin rewards directly to worker wallets without bureaucratic delay.
-    """
-    _check_admin(x_admin_secret)
-
-    if chain is None:
-        raise HTTPException(status_code=503, detail="Relay in offline mode")
-
-    if not req.visit_keys:
-        raise HTTPException(status_code=400, detail="Empty visit keys list")
-
-    try:
-        tx_hash = chain.batch_attest(req.visit_keys)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Batch attest failed: {str(e)}")
-
-    return {
-        "status":         "success",
-        "tx_hash":        tx_hash,
-        "attested_count": len(req.visit_keys),
-        "explorer":       f"https://mstscan.com/tx/{tx_hash}",
-    }
-
-
-
-@app.get("/verify/{record_hash}")
-async def verify_record(record_hash: str):
-    """
-    Public read-only endpoint for hospital verifier web app.
-    Given a record hash (from QR code), returns full on-chain status.
-    """
-    if chain is None:
-        raise HTTPException(status_code=503, detail="Relay in offline mode")
-
-    # Normalize
-    if not record_hash.startswith("0x"):
-        record_hash = "0x" + record_hash
-
-    try:
-        anchor = chain.get_anchor(record_hash)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Verify failed: {str(e)}")
-
-    worker_active = False
-    if anchor["exists"] and anchor["anchoredBy"] != "0x" + "00" * 20:
-        try:
-            worker_active = chain.is_worker_active(anchor["anchoredBy"])
-        except Exception:
-            pass
-
-    return {
-        "record_hash":     record_hash,
-        "anchored":        anchor["exists"],
-        "anchored_by":     anchor.get("anchoredBy"),
-        "anchored_at":     anchor.get("anchoredAt"),
-        "ai_digest":       anchor.get("aiDigest"),
-        "worker_active":   worker_active,
-        "explorer":        f"https://mstscan.com/address/{record_hash}" if anchor["exists"] else None,
-    }
-
-
-@app.get("/worker/{address}")
-async def worker_status(address: str):
-    """Worker's on-chain status and CareCoin balance."""
-    if chain is None:
-        raise HTTPException(status_code=503, detail="Relay in offline mode")
-
-    try:
-        active  = chain.is_worker_active(address)
-        balance = chain.care_coin_balance(address)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return {
-        "address":    address,
-        "active":     active,
-        "care_balance": balance,
-    }
-
-
-@app.get("/workers")
-async def list_all_workers(x_admin_secret: str | None = Header(None)):
-    """Admin: list all registered workers (no private keys exposed)."""
-    _check_admin(x_admin_secret)
-    return list_workers()
+@app.post("/api/submit-and-reward")
+def submit_and_reward(payload: RecordPayload):
+    return process_record(payload)
