@@ -348,7 +348,7 @@ python train_and_export.py
 
 ## ⚖️ License & Copyright
 
-**Copyright © 2026 M M Bharath / T7 HealthVault. All Rights Reserved.**
+**Copyright © 2026 T7 HealthVault. All Rights Reserved.**
 
 This software, including its source code, machine learning pipelines, trained models, database schemas, and documentation, is **PROPRIETARY and CONFIDENTIAL**. 
 
