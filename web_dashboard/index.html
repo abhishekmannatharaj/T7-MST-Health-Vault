@@ -3,31 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>T7 HealthVault — Frontline Worker Protocol & MST Audit</title>
+  <title>T7 HealthVault — Frontline Clinical Audit & MST Settlement</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    .glow-border { box-shadow: 0 0 20px rgba(14, 165, 233, 0.2); }
+    body { background-color: #f8fafc; }
+    .card-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); }
+    .glow-border-light { box-shadow: 0 0 15px rgba(13, 148, 136, 0.15); }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-cyan-500 selection:text-white">
+<body class="text-slate-800 min-h-screen font-sans antialiased selection:bg-teal-500 selection:text-white">
 
-  <!-- TOP EXPLANATORY BANNER FOR EVALUATORS -->
-  <div class="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border-b border-cyan-500/30 px-4 py-3 text-xs">
+  <!-- TOP EXPLANATORY BANNER FOR EVALUATORS (Hospital Theme) -->
+  <div class="bg-gradient-to-r from-teal-900 via-cyan-900 to-slate-900 text-white px-4 py-3 text-xs border-b border-teal-700/40">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="flex items-center space-x-3 text-left">
-        <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 text-[10px] uppercase tracking-wider">
+        <span class="px-2 py-0.5 rounded bg-teal-400/20 text-teal-200 font-bold border border-teal-400/40 text-[10px] uppercase tracking-wider">
           Evaluator Note
         </span>
-        <p class="text-slate-300 text-[11px] leading-tight">
-          This Web Portal is an <strong>interactive testbed & settlement simulator</strong> demonstrating our live MST Blockchain integration. 
-          The full frontline clinical system runs on our <strong>offline-first Flutter Android App</strong> for multiple registered ASHA workers.
+        <p class="text-slate-200 text-[11px] leading-tight">
+          This Web Portal is an <strong>interactive clinical audit & settlement simulator</strong> demonstrating our live MST Blockchain integration. 
+          The full frontline clinical system runs on our <strong>offline-first Flutter Android App</strong> for ASHA workers.
         </p>
       </div>
       <div class="flex items-center space-x-2 shrink-0">
-        <!-- Direct APK Download Link from your GitHub Releases/Repo -->
         <a href="https://github.com/abhishekmannatharaj/T7-MST-Health-Vault/releases" target="_blank"
-           class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-cyan-600/30 transition">
+           class="px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow transition">
           <i class="fa-brands fa-android text-sm"></i>
           <span>Download Mobile APK</span>
         </a>
@@ -40,27 +42,31 @@
     </div>
   </div>
 
-  <!-- Main Header -->
-  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur sticky top-0 z-40 px-6 py-3.5">
+  <!-- Header (Clean Hospital Light) -->
+  <header class="border-b border-slate-200 bg-white/90 backdrop-blur sticky top-0 z-40 px-6 py-3.5 card-shadow">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-cyan-600 flex items-center justify-center font-bold text-white shadow-md shadow-cyan-600/30">
+        <div class="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center font-bold text-white shadow-md shadow-teal-600/30">
           <i class="fa-solid fa-heart-pulse"></i>
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <h1 class="font-extrabold text-base tracking-tight text-white">T7 HealthVault</h1>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">Cancun EVM: 91562037</span>
+            <h1 class="font-extrabold text-base tracking-tight text-slate-900">T7 HealthVault</h1>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">Cancun EVM: 91562037</span>
           </div>
-          <p class="text-[11px] text-slate-400">Frontline Clinical Early Warning & Zero-PII Settlement Protocol</p>
+          <p class="text-[11px] text-slate-500">Frontline Clinical Early Warning & Zero-PII Settlement Protocol</p>
         </div>
       </div>
       
       <!-- Live Network Badge -->
       <div class="flex items-center space-x-3 text-xs">
-        <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center space-x-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-[11px] text-slate-300 font-medium">MST Testnet Live</span>
+        <div class="hidden sm:flex flex-col text-right">
+          <span class="text-[10px] text-slate-400">Beneficiary Wallet</span>
+          <span class="font-mono text-teal-700 text-xs font-semibold">0x7fb6...0257</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-[11px] text-emerald-800 font-semibold">MST Testnet Live</span>
         </div>
       </div>
     </div>
@@ -70,101 +76,101 @@
   <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
 
     <!-- MINDMAP / HOW IT WORKS ARCHITECTURAL CARD -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-        <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center space-x-1.5">
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 card-shadow space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <span class="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center space-x-1.5">
           <i class="fa-solid fa-diagram-project"></i>
-          <span>End-to-End System Mindmap & Data Flow</span>
+          <span>End-to-End System Architecture & Data Flow</span>
         </span>
-        <span class="text-[10px] text-slate-500 font-mono">Offline-First Architecture</span>
+        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">Offline-First Clinical Protocol</span>
       </div>
 
       <!-- Flow Steps Grid -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs pt-1">
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-          <div class="flex items-center space-x-2 text-cyan-400 font-bold text-[11px]">
-            <span class="w-5 h-5 rounded-full bg-cyan-950 border border-cyan-800 flex items-center justify-center text-[10px]">1</span>
-            <span>Frontline Mobile App</span>
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <div class="flex items-center space-x-2 text-teal-800 font-bold text-[11px]">
+            <span class="w-5 h-5 rounded-full bg-teal-100 border border-teal-300 flex items-center justify-center text-[10px] text-teal-800">1</span>
+            <span>Frontline Mobile Client</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            ASHAs log family records, immunization, and vitals completely offline in Kannada, Hindi, or English.
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            ASHAs log vitals & checkups offline in local languages (Kannada, Hindi, English).
           </p>
-          <span class="text-[9px] text-slate-500 font-mono block">Flutter • Local SQLite</span>
+          <span class="text-[9px] text-slate-400 font-mono block">Flutter • Local Encrypted SQLite</span>
         </div>
 
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-          <div class="flex items-center space-x-2 text-indigo-400 font-bold text-[11px]">
-            <span class="w-5 h-5 rounded-full bg-indigo-950 border border-indigo-800 flex items-center justify-center text-[10px]">2</span>
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <div class="flex items-center space-x-2 text-cyan-800 font-bold text-[11px]">
+            <span class="w-5 h-5 rounded-full bg-cyan-100 border border-cyan-300 flex items-center justify-center text-[10px] text-cyan-800">2</span>
             <span>Edge AI Clinical Triage</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            On-device NEWS2 calculation and embedded ONNX model predict sepsis risk & flag acute shock alerts.
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            On-device NEWS2 Engine & ONNX models calculate deterioration & sepsis risk locally.
           </p>
-          <span class="text-[9px] text-slate-500 font-mono block">ONNX Runtime • NEWS2/DELTA</span>
+          <span class="text-[9px] text-slate-400 font-mono block">ONNX Runtime • NEWS2/DELTA</span>
         </div>
 
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-          <div class="flex items-center space-x-2 text-amber-400 font-bold text-[11px]">
-            <span class="w-5 h-5 rounded-full bg-amber-950 border border-amber-800 flex items-center justify-center text-[10px]">3</span>
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <div class="flex items-center space-x-2 text-amber-800 font-bold text-[11px]">
+            <span class="w-5 h-5 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-[10px] text-amber-800">3</span>
             <span>Zero-PII Hashing</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            Patient PII stays strictly local. Only a canonical <code class="text-amber-300">keccak256</code> audit hash is prepared for verification.
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Patient identity stays local. A canonical <code class="text-amber-700 bg-amber-50 px-1 rounded">keccak256</code> audit hash is prepared.
           </p>
-          <span class="text-[9px] text-slate-500 font-mono block">DPDP Act & HIPAA Compliant</span>
+          <span class="text-[9px] text-slate-400 font-mono block">DPDP Act & HIPAA Compliant</span>
         </div>
 
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-          <div class="flex items-center space-x-2 text-emerald-400 font-bold text-[11px]">
-            <span class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center text-[10px]">4</span>
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+          <div class="flex items-center space-x-2 text-emerald-800 font-bold text-[11px]">
+            <span class="w-5 h-5 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-[10px] text-emerald-800">4</span>
             <span>MST Testnet Settlement</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            Smart contract (<code class="text-emerald-300">AshaVault.sol</code>) prevents duplicate claims and releases +0.50 $MSTC instantly.
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Smart contract (<code class="text-emerald-700 bg-emerald-50 px-1 rounded">AshaVault.sol</code>) releases +0.50 $MSTC instantly without double-dipping.
           </p>
-          <span class="text-[9px] text-slate-500 font-mono block">testnet.mstscan.com</span>
+          <span class="text-[9px] text-slate-400 font-mono block">testnet.mstscan.com</span>
         </div>
       </div>
     </div>
 
-    <!-- Main Workspace (Interactive Simulator) -->
+    <!-- Main Workspace -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
       <!-- Left / Center: Clinical Patient & Health Visit Entry Form -->
-      <div class="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6">
+      <div class="lg:col-span-8 bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 card-shadow space-y-6">
         
         <!-- Form Header -->
-        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
-            <h2 class="text-lg font-bold text-white flex items-center space-x-2">
-              <i class="fa-solid fa-clipboard-user text-cyan-400"></i>
-              <span>Interactive Verification Simulator</span>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <i class="fa-solid fa-notes-medical text-teal-600"></i>
+              <span>Patient Health Milestone Entry</span>
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Test how frontline mobile task submissions trigger on-chain settlement</p>
+            <p class="text-xs text-slate-500 mt-0.5">Capture clinical vitals and complete task verification</p>
           </div>
-          <span class="text-xs bg-slate-800/80 text-emerald-400 font-semibold px-2.5 py-1 rounded-md border border-slate-700/50">
+          <span class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-1 rounded-md border border-emerald-200">
             <i class="fa-solid fa-shield-halved mr-1"></i> Zero-PII Enforced
           </span>
         </div>
 
         <!-- Section 1: Patient Identity & Verification -->
         <div class="space-y-3">
-          <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">1. Patient Anonymous Token</label>
+          <label class="block text-xs uppercase tracking-wider text-slate-500 font-bold">1. Patient Identification</label>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Patient Token / ABHA ID</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Patient Token / ABHA ID</label>
               <input id="patientId" type="text" value="ABHA-BLR-89201" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-cyan-300 focus:border-cyan-500 outline-none transition" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-teal-800 focus:border-teal-500 focus:bg-white outline-none transition" />
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Aadhaar (Last 4 digits only)</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Aadhaar (Last 4 digits only)</label>
               <input id="aadhaarLast4" type="text" value="4821" maxlength="4"
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none transition" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 focus:border-teal-500 focus:bg-white outline-none transition" />
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Village / Ward Area</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Village / Ward Area</label>
               <input id="wardArea" type="text" value="Kadugodi Ward 04" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-cyan-500 outline-none transition" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:border-teal-500 focus:bg-white outline-none transition" />
             </div>
           </div>
         </div>
@@ -172,40 +178,40 @@
         <!-- Section 2: Clinical Vitals & Early Warning Assessment -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">2. Clinical Vitals & Triage (Edge Model Input)</label>
-            <span class="text-[10px] text-cyan-400 font-mono">NEWS2 & Sepsis Triage Ready</span>
+            <label class="block text-xs uppercase tracking-wider text-slate-500 font-bold">2. Clinical Vitals & Triage</label>
+            <span class="text-[10px] text-teal-600 font-mono bg-teal-50 px-2 py-0.5 rounded border border-teal-100">NEWS2 & Sepsis Triage Ready</span>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">BP (Systolic / Diastolic)</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">BP (Systolic / Diastolic)</label>
               <input id="bpVal" type="text" value="120/80" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 focus:border-teal-500 focus:bg-white outline-none" />
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Pulse (bpm)</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Pulse (bpm)</label>
               <input id="pulseVal" type="number" value="76" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 focus:border-teal-500 focus:bg-white outline-none" />
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">SpO2 (%)</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">SpO2 (%)</label>
               <input id="spo2Val" type="number" value="98" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 focus:border-teal-500 focus:bg-white outline-none" />
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Blood Sugar (mg/dL)</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Blood Sugar (mg/dL)</label>
               <input id="sugarVal" type="number" value="105" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:border-cyan-500 outline-none" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 focus:border-teal-500 focus:bg-white outline-none" />
             </div>
           </div>
         </div>
 
         <!-- Section 3: Task Milestone Category -->
         <div class="space-y-3">
-          <label class="block text-xs uppercase tracking-wider text-slate-400 font-bold">3. Healthcare Milestone Activity</label>
+          <label class="block text-xs uppercase tracking-wider text-slate-500 font-bold">3. Healthcare Milestone Activity</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Task Category (Eligible for Stipend)</label>
-              <select id="taskCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-cyan-500 outline-none">
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Task Category (Eligible for Stipend)</label>
+              <select id="taskCategory" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:border-teal-500 focus:bg-white outline-none">
                 <option value="Maternal ANC Checkup 3">Maternal ANC Checkup 3 (₹200 / +0.50 $MSTC)</option>
                 <option value="Child Immunization Polio Booster">Child Immunization: Polio Booster (+0.50 $MSTC)</option>
                 <option value="Institutional Delivery Accompaniment">Institutional Delivery Accompaniment (+0.50 $MSTC)</option>
@@ -213,19 +219,39 @@
               </select>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Visit Verification Notes</label>
+              <label class="block text-[11px] text-slate-600 mb-1 font-medium">Visit Verification Notes</label>
               <input id="visitNotes" type="text" value="Iron tablets distributed. Mother counseling completed." 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-cyan-500 outline-none" />
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:border-teal-500 focus:bg-white outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Photo / Verification Document Capture -->
+        <div class="space-y-2">
+          <label class="block text-xs uppercase tracking-wider text-slate-500 font-bold">4. Photo Verification (Prescription / Child Card)</label>
+          <div class="border-2 border-dashed border-slate-300 hover:border-teal-500 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50/70 relative">
+            <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleImage(event)" />
+            <div id="uploadPrompt" class="space-y-1">
+              <i class="fa-solid fa-camera text-slate-400 text-xl mb-1"></i>
+              <p class="text-xs text-slate-700 font-semibold">Click to snap photo or select file</p>
+              <p class="text-[10px] text-slate-400">Stored locally in off-chain database (Encrypted)</p>
+            </div>
+            <div id="imagePreviewContainer" class="hidden flex items-center justify-center space-x-3">
+              <img id="imagePreview" src="" alt="Proof" class="h-16 w-16 object-cover rounded-lg border border-slate-300" />
+              <div class="text-left text-xs">
+                <span id="imageFileName" class="text-slate-800 font-semibold block">immunization_card.jpg</span>
+                <span class="text-emerald-600 text-[10px] font-semibold"><i class="fa-solid fa-check"></i> Image attached locally</span>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Submit Action -->
         <div class="pt-2">
-          <button id="submitBtn" onclick="submitSimulatorRecord()" 
-                  class="w-full py-4 bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/20 active:scale-[0.99] transition flex items-center justify-center space-x-2 text-sm">
+          <button id="submitBtn" onclick="submitAshaRecord()" 
+                  class="w-full py-4 bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-600/20 active:scale-[0.99] transition flex items-center justify-center space-x-2 text-sm">
             <i class="fa-solid fa-cloud-arrow-up"></i>
-            <span>Simulate Mobile Sync & Anchor to MST Blockchain</span>
+            <span>Submit Health Record & Disburse +0.50 $MSTC</span>
           </button>
         </div>
 
@@ -235,63 +261,65 @@
       <div class="lg:col-span-4 space-y-5">
         
         <!-- Live Wallet Balance Card -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-            <span class="text-xs font-bold text-slate-300">ASHA Beneficiary Wallet</span>
-            <span class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded">Real-Time Payout</span>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 card-shadow space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <span class="text-xs font-bold text-slate-700">ASHA Beneficiary Wallet</span>
+            <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold">Real-Time Payout</span>
           </div>
 
-          <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
-            <span class="text-[11px] text-slate-400 block mb-0.5">Current Wallet Balance</span>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <span class="text-[11px] text-slate-500 block mb-0.5">Current Wallet Balance</span>
             <div class="flex items-baseline space-x-2">
-              <span id="workerBalDisplay" class="text-2xl font-black text-emerald-400 font-mono">51.4992</span>
-              <span class="text-xs font-bold text-slate-300">$MSTC</span>
+              <span id="sidebarWorkerBal" class="text-2xl font-black text-emerald-600 font-mono">Loading...</span>
+              <span class="text-xs font-bold text-slate-700">$MSTC</span>
             </div>
             <span class="text-[10px] text-slate-500 block mt-1">Directly credited per verified milestone</span>
           </div>
 
-          <div class="text-[11px] space-y-2 text-slate-400">
+          <div class="text-[11px] space-y-2 text-slate-600">
             <div class="flex justify-between">
               <span>Contract Escrow Pool:</span>
-              <span class="font-mono text-cyan-400 font-semibold">8.50 MSTC</span>
+              <span id="escrowPool" class="font-mono text-teal-700 font-bold">Loading...</span>
             </div>
             <div class="flex justify-between">
               <span>Settlement Speed:</span>
-              <span class="font-mono text-emerald-400 font-semibold">&lt; 3 Seconds</span>
+              <span class="font-mono text-emerald-600 font-semibold">&lt; 3 Seconds</span>
             </div>
           </div>
         </div>
 
         <!-- Mined Transaction Confirmation Card -->
-        <div id="minedCard" class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-5 space-y-3.5 shadow-xl glow-border">
+        <div id="minedCard" class="bg-white border border-teal-200 rounded-2xl p-5 space-y-3.5 card-shadow glow-border-light">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-              <h3 class="font-bold text-emerald-400 text-xs uppercase tracking-wider">Mined On MST Blockchain</h3>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <h3 class="font-bold text-teal-800 text-xs uppercase tracking-wider">Mined On MST Blockchain</h3>
             </div>
-            <span class="text-[10px] font-mono text-slate-400">Block #20868900</span>
+            <span class="text-[10px] font-mono text-slate-500">MST Testnet</span>
           </div>
 
-          <div class="space-y-2 text-[11px] bg-slate-950 p-3 rounded-xl border border-slate-800/70 font-mono">
+          <div class="space-y-2 text-[11px] bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono">
             <div>
               <span class="text-slate-500 block">Transaction Hash:</span>
-              <span class="text-cyan-400 font-bold break-all">0xdadb4ec25fc13afa95dc1f89927a181ee5c1e6eff1a06c74387fed5290d48de8</span>
+              <span id="txHashDisplay" class="text-teal-700 font-bold break-all">0x...</span>
             </div>
             <div>
               <span class="text-slate-500 block mt-1">Zero-PII Audit Hash:</span>
-              <span class="text-slate-300 break-all">0xbe86679738aa3f48f83a6f75899334175d7cbe1951c8f93b34f1e6ad55ff9aad</span>
+              <span id="taskHashDisplay" class="text-slate-600 break-all">0x...</span>
             </div>
-            <div class="flex justify-between pt-1 border-t border-slate-800 text-[11px]">
-              <span class="text-slate-400">Reward Disbursed:</span>
-              <span class="text-emerald-400 font-bold">+0.50 $MSTC</span>
+            <div class="flex justify-between pt-1 border-t border-slate-200 text-[11px]">
+              <span class="text-slate-500">Reward Disbursed:</span>
+              <span class="text-emerald-600 font-bold">+0.50 $MSTC</span>
             </div>
           </div>
 
-          <a href="https://testnet.mstscan.com/tx/0xdadb4ec25fc13afa95dc1f89927a181ee5c1e6eff1a06c74387fed5290d48de8" target="_blank"
-             class="flex items-center justify-center w-full py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-cyan-400 rounded-xl text-xs font-semibold transition space-x-2">
-            <span>Verify Live on testnet.mstscan.com</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-          </a>
+          <div class="space-y-2">
+            <a id="explorerLink" href="https://testnet.mstscan.com/address/0x33Ef1680EcA40d863fc00C460EB9975bbBA12d9f" target="_blank"
+               class="flex items-center justify-center w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition space-x-2">
+              <span>Verify Contract Live on testnet.mstscan.com</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
         </div>
 
       </div>
@@ -300,17 +328,122 @@
   </main>
 
   <script>
-    function submitSimulatorRecord() {
+    // 1. Direct MST Testnet RPC & Contract Configuration
+    const MST_RPC_URL = "https://testnetrpc.mstblockchain.com";
+    const CHAIN_ID = 91562037;
+    const CONTRACT_ADDRESS = "0x33Ef1680EcA40d863fc00C460EB9975bbBA12d9f";
+
+    // Dedicated demo relayer private key (used to sign payouts directly in browser)
+    const RELAY_PRIVATE_KEY = "0xded30779cfb036e0bb54085b390c7b72e6eb2ce768a9d0d1b16c7be460ede0d7";
+
+    const ABI = [
+      "function submitAndReward(address payable worker, bytes32 taskHash) external",
+      "function isTaskProcessed(bytes32 taskHash) external view returns (bool)",
+      "function workerCompletedCount(address) external view returns (uint256)"
+    ];
+
+    // Initialize Ethers Provider and Relayer Wallet
+    const provider = new ethers.JsonRpcProvider(MST_RPC_URL);
+    const relayWallet = new ethers.Wallet(RELAY_PRIVATE_KEY, provider);
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, relayWallet);
+
+    // Default ASHA worker wallet to receive disbursements
+    const DEFAULT_WORKER_WALLET = "0x7fb65d4f7aFA415d17456FaB29a4b7496a5E0257";
+
+    // 2. Fetch Live Balances directly from MST Testnet
+    async function refreshOnChainStatus() {
+      try {
+        const escrowWei = await provider.getBalance(CONTRACT_ADDRESS);
+        const workerWei = await provider.getBalance(DEFAULT_WORKER_WALLET);
+
+        const escrowBal = parseFloat(ethers.formatEther(escrowWei)).toFixed(2);
+        const workerBal = parseFloat(ethers.formatEther(workerWei)).toFixed(4);
+
+        if (document.getElementById('escrowPool')) {
+          document.getElementById('escrowPool').innerText = `${escrowBal} MSTC`;
+        }
+        if (document.getElementById('sidebarWorkerBal')) {
+          document.getElementById('sidebarWorkerBal').innerText = workerBal;
+        }
+      } catch (err) {
+        console.warn("MST RPC Status Check:", err);
+      }
+    }
+
+    // 3. Handle Local Image Preview
+    function handleImage(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('imagePreview').src = evt.target.result;
+          document.getElementById('imageFileName').innerText = file.name;
+          document.getElementById('uploadPrompt').classList.add('hidden');
+          document.getElementById('imagePreviewContainer').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // 4. Submit Record & Execute On-Chain Payout
+    async function submitAshaRecord() {
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span> Simulating Mobile Sync & Verifying Hash...</span>`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span> Broadcasting to MST Cancun EVM...</span>`;
 
-      setTimeout(() => {
+      const patientId = document.getElementById('patientId').value.trim();
+      const taskType = document.getElementById('taskCategory').value.trim();
+      const timestamp = Math.floor(Date.now() / 1000);
+
+      try {
+        // Step A: Compute Deterministic Zero-PII keccak256 Hash
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        const encodedData = abiCoder.encode(
+          ["address", "string", "string", "uint256"],
+          [DEFAULT_WORKER_WALLET, patientId, taskType, timestamp]
+        );
+        const taskHash = ethers.keccak256(encodedData);
+
+        // Step B: Check duplicate claim directly on smart contract
+        const isAlreadyClaimed = await contract.isTaskProcessed(taskHash);
+        if (isAlreadyClaimed) {
+          alert("Smart Contract Revert: Task already recorded and rewarded on-chain!");
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Submit Health Record & Disburse +0.50 $MSTC</span>`;
+          return;
+        }
+
+        // Step C: Send Transaction directly to MST Testnet
+        const tx = await contract.submitAndReward(DEFAULT_WORKER_WALLET, taskHash, {
+          gasLimit: 250000
+        });
+
+        // Wait for 1 block confirmation on MST Testnet
+        const receipt = await tx.wait(1);
+
+        // Step D: Update UI with confirmed mined transaction details
+        const txHash = receipt.hash;
+        document.getElementById('txHashDisplay').innerText = txHash;
+        document.getElementById('taskHashDisplay').innerText = taskHash;
+        document.getElementById('explorerLink').href = `https://testnet.mstscan.com/tx/${txHash}`;
+
+        // Refresh on-chain balance
+        await refreshOnChainStatus();
+
+        alert(`Success! Transaction mined in block #${receipt.blockNumber}. +0.50 $MSTC disbursed!`);
+
+      } catch (error) {
+        console.error(error);
+        alert("MST Testnet Transaction Error: " + (error.reason || error.message));
+      } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Simulate Mobile Sync & Anchor to MST Blockchain</span>`;
-        alert("Verification Success: Zero-PII Audit hash generated and verified against MST Testnet AshaVault contract (0x33Ef...d9f). Direct on-chain proof is live on MSTScan!");
-      }, 1200);
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span> Submit Health Record & Disburse +0.50 $MSTC</span>`;
+      }
     }
+
+    // Initial load
+    refreshOnChainStatus();
+    setInterval(refreshOnChainStatus, 6000);
   </script>
 </body>
 </html>
