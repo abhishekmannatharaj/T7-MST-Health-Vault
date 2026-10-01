@@ -30,6 +30,9 @@ All smart contracts are compiled with Solidity `^0.8.24` and deployed on the **M
 
 <img width="1877" height="577" alt="image" src="https://github.com/user-attachments/assets/2295a0dc-c410-4638-aa5c-a5190970f9b9" />
 
+<img width="1905" height="715" alt="image" src="https://github.com/user-attachments/assets/37fbd789-9ce9-44b2-ae27-54b2f62dd146" />
+
+
 
 ## 1. 🔗 MST Blockchain Integration Architecture
 
